@@ -88,6 +88,7 @@ laptop: its `localhost` is not yours.
 | `PROVIDER_ERROR Cannot reach the model provider`; the trace says `invalid peer certificate: UnknownIssuer` | Outbound HTTPS is re-signed by a CA the container does not trust. Use `compose.cloud.yaml` with a full CA bundle. |
 | `PROVIDER_ERROR The selected model provider rejected the request`; the trace says `Your credit balance is too low` | The key works but its Anthropic organization has no API credit. Add credit (Plans and Billing in the Anthropic Console) or use a key from a funded organization. |
 | `docker pull` from Docker Hub fails with `429 Too Many Requests` | Anonymous pull limit. The Nutq image already uses the ECR mirror of the official Node image. |
+| Building `nutq` fails with `public.ecr.aws ... 429 Too Many Requests`, `Data limit exceeded` | The ECR mirror's own limit. Build from Docker Hub, same digest: `docker compose ... build --build-arg NODE_IMAGE=docker.io/library/node:22-bookworm-slim@sha256:<digest>`, with the digest from [nutq.Dockerfile](nutq.Dockerfile), then `up -d`. |
 | The page closes the connection at once (`1006`) | Wrong or missing token, see the [README](../README.md#troubleshooting). |
 | `capture-speech.sh` records silence and the page logs `tts_error synthesis-failed` | A speech-dispatcher that started before PulseAudio. The script stops it; if you set things up by hand, start PulseAudio first. |
 
@@ -97,17 +98,29 @@ provider error from it when a turn fails.
 
 ## Checked on 2026-10-19 (Claude Code cloud environment)
 
-Docker 29.8.2, Compose v5.6.0, cgroup v1, no IPv6 on the Docker network; Node 22.22.0 on the host; Chromium 141 from
-Playwright. Real runs unless marked otherwise.
+Docker 29.8.2, Compose v5.6.0, cgroup v1, no IPv6 on the Docker network; ZeroClaw 0.8.5 with the default model,
+`claude-haiku-4-5-20251001`; Node 22.22.0 on the host; Chromium 141.0.7390.37 from Playwright; PulseAudio 16.1,
+speech-dispatcher 0.12.0-rc2 and eSpeak NG 1.51 for the recording. Real runs unless marked otherwise.
 
-- Passed: both services healthy; gateway `/health` ok with pairing required; page and speech model served; container
-  networking; `api.anthropic.com` reachable from the container (401 without a key); the key boundary; pairing.
-- Passed, real page against the real gateway: connected in 0.3 to 2.3 s, speech model ready in 5 to 15 s; Test voice
-  spoke through the browser's speech synthesis (espeak-ng voice, ranked choice, robotic hint shown) and was recorded.
-- A full spoken turn from a synthetic question (espeak-ng audio used as the microphone): Moonshine transcribed "What is
-  the capital of France?" exactly, the turn ended by itself after 1000 ms and was sent; Anthropic refused it for credit
-  balance, Nutq showed the error and spoke nothing.
-- Blocked: no turn got an answer, because the Anthropic organization behind the key had no credit. The memory peak of
-  an answered turn is therefore not measured.
-- Measured once: peak memory 17.4 MiB for `zeroclaw` and 351.6 MiB for `nutq`.
-- `npx tsc --noEmit` clean; `npm test` 483 tests, 480 passed, 3 skipped (they need the recorded test audio).
+- `deploy/check.sh`: 16 passed, 0 failed, twice (with the old 512m limit for `zeroclaw` and with the new 128m), each
+  time including one real turn over `/ws/chat` answered by Anthropic.
+- Reply latency over `/ws/chat`, measured from sending the message: first chunk 460 to 914 ms and done 533 to 1350 ms
+  over seven short turns ("What is the capital of France?" and check.sh's own message); two long replies (1,903 and
+  2,180 characters) had their first chunk at 668 and 628 ms and were done at 6.2 and 6.7 s.
+- A full spoken turn on the real page against the real gateway, from a synthetic question (espeak-ng audio, 48 kHz mono,
+  used as the microphone): connected in 2.5 s, speech model ready at 6.4 s; Moonshine transcribed "What is the capital
+  of France?" exactly; the turn was sent after 1000 ms without speech; the done frame came 1003 ms after sending; the
+  page spoke the three-sentence answer in the espeak-ng voice (ranked choice, robotic hint shown) and
+  `capture-speech.sh` recorded it. The trimmed recording is 15.7 s long; espeak-ng on the command line, default rate,
+  reads the whole answer in 15.3 s and its first sentence alone in 2.0 s.
+- Memory, from cgroup v1 `memory.max_usage_in_bytes` (`failcnt` stayed 0): `zeroclaw` peaked at 19.2 MiB from start
+  through pairing and seven answered turns, and at 21.7 MiB during one long answered turn (counter reset just before
+  it); under the new 128m limit it peaked at 14.9 MiB over two answered turns, one of them long. `nutq` peaked at
+  337.9 MiB after one page session; an earlier run the same day measured 351.6 MiB.
+- From an earlier run the same day, not repeated here: Test voice spoke through the browser's speech synthesis and was
+  recorded.
+- The first `up -d --build` failed with the ECR 429 above. A retry went through, after the same digest had been pulled
+  from Docker Hub; whether ECR answered the second time or the build used the pulled copy was not established. The
+  `--build-arg` workaround above was then run and built from cache.
+- `npx tsc --noEmit` clean; `npm test` with `CHROME_BIN` set: 483 tests, 480 passed, 3 skipped (they need the recorded
+  test audio, `EVAL_AUDIO_DIR`).
