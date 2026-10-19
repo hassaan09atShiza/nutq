@@ -179,6 +179,10 @@ is on that fork's `master`). Two caveats, because the test backend was a local b
 - Nutq was built and checked against that one version. Other versions may work, since Nutq uses only `/pair` and the
   `/ws/chat` frames; this has not been tried.
 
+For a gateway without building anything, [deploy/README.md](deploy/README.md) runs Nutq and a prebuilt ZeroClaw 0.8.5
+image (pinned by digest) together with Docker Compose, with automated checks. 0.8.5 needed settings this README does not
+otherwise mention (named risk and runtime profiles, an IPv4 bind); the config there is the working baseline.
+
 The fork's `docker-compose.yml` pulls the image `ghcr.io/zeroclaw-labs/zeroclaw:latest`. For a container with a shell (to
 `docker exec` into it for configuration and debugging), build `Dockerfile.debian` instead of the default distroless
 image.

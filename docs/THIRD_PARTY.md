@@ -110,7 +110,20 @@ The Web Speech API (`speechSynthesis`) uses the voices the user's browser and op
 downloaded or bundled by Nutq. An online browser voice (such as Google voices in Chrome or Microsoft online voices in Edge)
 is a service of the browser's vendor, not of Nutq: the browser sends the reply text to that provider to be spoken.
 
-## 7. Not found
+## 7. Container images used by `deploy/` (not shipped, pulled by Docker)
+
+The Docker Compose setup in [deploy/](../deploy/README.md) pulls two images when someone runs it. Nothing from them is
+copied into this repository or into the page. Checked on 2026-10-19.
+
+| Image | Pinned digest | License |
+|---|---|---|
+| `ghcr.io/zeroclaw-labs/zeroclaw` (ZeroClaw 0.8.5, Debian bookworm base) | `sha256:1876f4cfc85d1fd3f418e0607fc9207ef6525113e985092ac09b8dcd179df05e` | **TBD**: the image has no license label and no license file outside Debian's package docs (`/usr/share/doc`), and the upstream repository was not checked |
+| `public.ecr.aws/docker/library/node:22-bookworm-slim` (Node.js 22.23.3), the Docker official image mirrored on ECR | `sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392` | Node.js: MIT, read from `/usr/local/LICENSE` in the image; its Debian packages keep their own licenses under `/usr/share/doc` |
+
+`deploy/capture-speech.sh` also expects system packages on the machine that runs it (PulseAudio, speech-dispatcher,
+espeak-ng, Xvfb). The script does not install them; they come from that machine's own package manager.
+
+## 8. Not found
 
 Nothing in the list above was left without a license. Two gaps in the evidence are stated in the table: the Moonshine
 weights have no license file at their download host, and the Silero model was not compared byte for byte with the file in

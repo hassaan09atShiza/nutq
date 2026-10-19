@@ -4,6 +4,12 @@
 
 ### Added
 
+- `deploy/`: Docker Compose for Nutq's dev server and a prebuilt ZeroClaw 0.8.5 image pinned by digest, with a one-time
+  seeded config (Anthropic provider `anthropic.default`, agent `default`), the API key passed to the gateway only as a
+  compose secret, memory limits, and an overlay for hosts that re-sign outbound HTTPS. Checks: `check.sh` (health,
+  networking, key boundary, memory, one real `/ws/chat` turn), `pair.sh`, `ws-chat-check.mjs`, `page-check.mjs` (the real
+  page against the real gateway in Chrome) and `capture-speech.sh` (records what the page speaks on a Linux machine
+  without speakers). See `deploy/README.md`.
 - A Reply voice menu under the microphone, in both themes: Automatic (best available) and the ranked English voices only. The choice
   is kept in local storage under `voice` and applies from the next utterance. A Test voice button speaks one short sentence through
   the normal speech path (so cancel and the mic tap stop it) and does nothing while an answer is in flight or the microphone is listening. With no voices listed the
