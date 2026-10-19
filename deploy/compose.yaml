@@ -40,9 +40,10 @@ services:
       - ./zeroclaw:/nutq:ro
     ports:
       - "127.0.0.1:42617:42617"
-    # Measured once (2026-10-19, ZeroClaw 0.8.5): peak 17.4 MiB over pairing, CLI calls and turns that failed at the
-    # provider. The peak of a turn that gets an answer was not measured yet (TBD), hence the wide margin.
-    mem_limit: 512m
+    # Measured 2026-10-19 (ZeroClaw 0.8.5, cgroup v1 memory.max_usage_in_bytes): peak 21.7 MiB during one answered turn
+    # with a 1,903-character reply, and 19.2 MiB from start through pairing and seven shorter answered turns. 128m is
+    # about six times that. Turns that run tools and long sessions were not measured (TBD); raise it if they need more.
+    mem_limit: 128m
     healthcheck:
       test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:42617/health"]
       interval: 10s
