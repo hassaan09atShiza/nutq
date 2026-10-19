@@ -1,0 +1,7 @@
+.git
+node_modules
+dist
+dist-ssr
+eval/results
+deploy/.local
+*.local

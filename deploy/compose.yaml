@@ -1,0 +1,71 @@
+# Nutq and a ZeroClaw gateway, for a local baseline. See deploy/README.md.
+#
+#   NUTQ_ANTHROPIC_API_KEY must be set in the shell that runs compose. It is passed to the zeroclaw service only, as a
+#   compose secret, and never to Nutq: the browser page talks to the gateway, not to Anthropic.
+#
+#   docker compose -f deploy/compose.yaml up -d --build
+#
+# Both ports are published on the host's loopback only: http://localhost:5173 (Nutq) and ws://127.0.0.1:42617/ws/chat.
+
+name: nutq
+
+x-zeroclaw-image: &zeroclaw-image ghcr.io/zeroclaw-labs/zeroclaw@sha256:1876f4cfc85d1fd3f418e0607fc9207ef6525113e985092ac09b8dcd179df05e
+
+services:
+  # Copies zeroclaw/config.toml into the volume the first time, then exits. Later runs leave the volume alone.
+  zeroclaw-seed:
+    image: *zeroclaw-image
+    entrypoint: ["bash", "/nutq/seed.sh"]
+    network_mode: none
+    volumes:
+      - zeroclaw-data:/zeroclaw-data
+      - ./zeroclaw:/nutq:ro
+    mem_limit: 64m
+    restart: "no"
+
+  zeroclaw:
+    image: *zeroclaw-image
+    entrypoint: ["bash", "/nutq/run.sh"]
+    command: ["daemon"]
+    depends_on:
+      zeroclaw-seed:
+        condition: service_completed_successfully
+    environment:
+      # Not a secret. Override with NUTQ_ZEROCLAW_MODEL; the default is the model the repo's live eval runs used.
+      ZEROCLAW_providers__models__anthropic__default__model: ${NUTQ_ZEROCLAW_MODEL:-claude-haiku-4-5-20251001}
+    secrets:
+      - anthropic_api_key
+    volumes:
+      - zeroclaw-data:/zeroclaw-data
+      - ./zeroclaw:/nutq:ro
+    ports:
+      - "127.0.0.1:42617:42617"
+    # Measured once (2026-10-19, ZeroClaw 0.8.5): peak 17.4 MiB over pairing, CLI calls and turns that failed at the
+    # provider. The peak of a turn that gets an answer was not measured yet (TBD), hence the wide margin.
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:42617/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+  nutq:
+    build:
+      context: ..
+      dockerfile: deploy/nutq.Dockerfile
+    image: nutq-dev:local
+    ports:
+      - "127.0.0.1:5173:5173"
+    # Measured once (2026-10-19): the vite dev server peaked at 351.6 MiB after serving the speech model to several
+    # browser sessions. The limit only covers the server; the speech model runs in the browser, not here.
+    mem_limit: 768m
+    restart: unless-stopped
+
+volumes:
+  zeroclaw-data:
+
+secrets:
+  anthropic_api_key:
+    environment: NUTQ_ANTHROPIC_API_KEY

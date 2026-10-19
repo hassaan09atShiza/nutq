@@ -1,0 +1,32 @@
+schema_version = 3
+
+# The baseline ZeroClaw config for Nutq, copied into the zeroclaw-data volume once by seed.sh. ZeroClaw writes to it
+# afterwards (paired tokens, for one), so the copy in the volume is the live one and this file is only the seed.
+#
+# Neither the API key nor the model is stored here. compose.yaml passes the model as
+# ZEROCLAW_providers__models__anthropic__default__model, and run.sh passes the key as
+# ZEROCLAW_providers__models__anthropic__default__api_key, ZeroClaw's env override grammar for this table.
+[providers.models.anthropic.default]
+
+# `default` is reserved in ZeroClaw 0.8.5: `zeroclaw agents create default` refuses it, but this section is accepted.
+# Both profile references are required: without risk_profile every turn fails with AGENT_INIT_FAILED ("does not name a
+# configured risk_profiles entry").
+[agents.default]
+model_provider = "anthropic.default"
+risk_profile = "default"
+runtime_profile = "default"
+
+# Empty on purpose: ZeroClaw's own defaults for both (`zeroclaw config schema` lists them).
+[risk_profiles.default]
+
+[runtime_profiles.default]
+
+[gateway]
+# Inside the container the gateway has to listen on every interface; compose publishes it on the host's loopback only.
+# IPv4 on purpose: the image's own default, "[::]", fails with "Address family not supported by protocol (os error 97)"
+# on a Docker network without IPv6, and the gateway never comes up.
+host = "0.0.0.0"
+port = 42617
+allow_public_bind = true
+# The image's own default config sets this, so the dashboard keeps working.
+web_dist_dir = "/usr/share/zeroclawlabs/web/dist"

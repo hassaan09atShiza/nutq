@@ -1,0 +1,31 @@
+# Overlay for a host whose outbound HTTPS is re-signed by its own CAs, such as the Claude Code cloud environment. Without
+# it, containers there fail TLS verification ("self-signed certificate in certificate chain"). Not needed on a laptop.
+#
+#   NUTQ_EXTRA_CA_FILE=/root/.ccr/ca-bundle.crt \
+#     docker compose -f deploy/compose.yaml -f deploy/compose.cloud.yaml up -d --build
+#
+# NUTQ_EXTRA_CA_FILE must be a full trust bundle (public roots plus the environment's CAs), because it replaces the
+# container's trust store. In the cloud environment that is /root/.ccr/ca-bundle.crt. Notes from setting this up with
+# ZeroClaw 0.8.5:
+# - Direct traffic to api.anthropic.com is signed by "sandbox-egress-gateway-production Egress Gateway CA", which is in
+#   that bundle; /root/.ccr/agent-proxy-ca.crt alone does not cover it.
+# - ZeroClaw's per-provider setting, providers.models.anthropic.default.tls_ca_cert_path, did not help: every turn still
+#   failed with "invalid peer certificate: UnknownIssuer", with the full bundle, with the proxy CA alone, and with the
+#   five environment CAs (egress gateway CA first or last). Why was not found.
+# - SSL_CERT_FILE works: the binary verifies with rustls-platform-verifier, which reads the system trust store.
+
+services:
+  zeroclaw:
+    environment:
+      SSL_CERT_FILE: /etc/nutq/extra-ca.crt
+    volumes:
+      - ${NUTQ_EXTRA_CA_FILE:?set NUTQ_EXTRA_CA_FILE to the CA bundle}:/etc/nutq/extra-ca.crt:ro
+
+  nutq:
+    build:
+      secrets:
+        - extra_ca
+
+secrets:
+  extra_ca:
+    file: ${NUTQ_EXTRA_CA_FILE:?set NUTQ_EXTRA_CA_FILE to the CA bundle}

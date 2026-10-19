@@ -29,3 +29,5 @@ graphify-out/
 # Raw eval-run data (real client events, filtered trace rows): local
 # evidence only, never committed. summary.json/README.md next to it are.
 eval/results/*/raw/
+# Local compose state: the gateway bearer token saved by deploy/pair.sh. Never committed.
+deploy/.local/
