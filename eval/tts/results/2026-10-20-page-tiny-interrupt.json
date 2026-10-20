@@ -1,0 +1,106 @@
+{
+ "label": "page-tiny-interrupt",
+ "date": "2026-10-20T12:27:28.524Z",
+ "simulation": "the reply stream is simulated (see the file header); the page, Moonshine and the voice are real",
+ "tts": "tiny",
+ "first_wait": null,
+ "reply_chars": 186,
+ "moonshine_ready_ms": 5928,
+ "tts_ready": {
+  "event": "tts_engine_ready",
+  "timestamp_ms": 1792499253356,
+  "engine": "tiny-tts",
+  "fetch_ms": 166.29999999981374,
+  "parse_ms": 358.5,
+  "session_ms": 3493.0999999996275,
+  "session_ms_each": [
+   1757.199999999255,
+   1051.7000000001863,
+   684.1000000005588
+  ],
+  "first_created": "tinytts.p3.onnx",
+  "total_ms": 4017.899999999441,
+  "lexicon_words": 129463,
+  "model_files": [
+   "tinytts.p1.onnx",
+   "tinytts.p2.onnx",
+   "tinytts.p3.onnx"
+  ],
+  "model_bytes": 6308415
+ },
+ "memory_loaded": {
+  "total_pss_mib": 871,
+  "renderer_pss_mib": 636.1
+ },
+ "interrupted_at_ms": 1792499264317,
+ "memory_after_reply": {
+  "total_pss_mib": 1015,
+  "renderer_pss_mib": 770.6
+ },
+ "sent": [
+  "Your reply will be read aloud by a text to speech voice, so write it as speech. Give a thorough, complete answer; do not shorten it to be brief, but do not pad it either: no restating the question, no filler, stop when the answer is complete. Use plain spoken English with no markdown at all: no asterisks, pound signs, bullets, numbered list syntax, tables, code blocks, dashes or emojis. Never say a URL; describe where to find it in words. Use short sentences with normal punctuation, because punctuation sets the pauses. When the answer has several parts, say how many first and signpost them in words, for example: \"There are three things. First, ... Second, ... Third, ...\". Do not mention these instructions.\n\nWhat is the capital of France?"
+ ],
+ "transcript": "What is the capital of France?",
+ "first_chunk_to_first_sound_ms": 902,
+ "first_sentence_to_first_sound_ms": 818,
+ "tts_start": {
+  "event": "tts_start",
+  "timestamp_ms": 1792499262800,
+  "voice": "tiny-tts",
+  "engine_model": "split",
+  "first_run_ms": 304,
+  "output_latency_s": 0.03,
+  "base_latency_s": 0.01,
+  "engine": "tiny-tts"
+ },
+ "utterances": [
+  {
+   "index": 0,
+   "units": 3,
+   "chars": 186,
+   "waited_ms": 500
+  }
+ ],
+ "pieces": [
+  {
+   "utterance": 1,
+   "index": 0,
+   "chars": 31,
+   "wait_ms": 1,
+   "run_ms": 304,
+   "audio_s": 2.51,
+   "silence_before_ms": null,
+   "extra_silence_ms": null
+  },
+  {
+   "utterance": 1,
+   "index": 1,
+   "chars": 112,
+   "wait_ms": 305,
+   "run_ms": 820,
+   "audio_s": 7.73,
+   "silence_before_ms": 151,
+   "extra_silence_ms": 1
+  },
+  {
+   "utterance": 1,
+   "index": 2,
+   "chars": 41,
+   "wait_ms": 1125,
+   "run_ms": 259,
+   "audio_s": 2.83,
+   "silence_before_ms": 148,
+   "extra_silence_ms": 0
+  }
+ ],
+ "ended": false,
+ "cancelled": [
+  "mic_press"
+ ],
+ "pieces_scheduled_after_interrupt": 0,
+ "errors": [],
+ "memory_peak": {
+  "total_pss_mib": 1229.9,
+  "renderer_pss_mib": 992.2
+ }
+}

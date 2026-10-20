@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nutq TTS benchmark</title>
+  </head>
+  <body>
+    <!-- The tiny-tts benchmark (eval/tts/README.md). Dev server only; eval/tts/run-bench.mjs drives it and reads window.__bench.
+         Opened by hand, it waits for the button: a browser plays audio only after a click on the page. -->
+    <button id="run" type="button" hidden>Run the benchmark</button>
+    <pre id="out">loading</pre>
+    <script type="module" src="./bench.ts"></script>
+  </body>
+</html>

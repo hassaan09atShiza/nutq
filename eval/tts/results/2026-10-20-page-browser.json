@@ -1,0 +1,39 @@
+{
+ "label": "page-browser",
+ "date": "2026-10-20T12:25:50.340Z",
+ "simulation": "the reply stream is simulated (see the file header); the page, Moonshine and the voice are real",
+ "tts": "browser",
+ "first_wait": null,
+ "reply_chars": 186,
+ "moonshine_ready_ms": 8863,
+ "memory_loaded": {
+  "total_pss_mib": 687.5,
+  "renderer_pss_mib": 456
+ },
+ "memory_after_reply": {
+  "total_pss_mib": 746.2,
+  "renderer_pss_mib": 509.7
+ },
+ "sent": [
+  "Your reply will be read aloud by a text to speech voice, so write it as speech. Give a thorough, complete answer; do not shorten it to be brief, but do not pad it either: no restating the question, no filler, stop when the answer is complete. Use plain spoken English with no markdown at all: no asterisks, pound signs, bullets, numbered list syntax, tables, code blocks, dashes or emojis. Never say a URL; describe where to find it in words. Use short sentences with normal punctuation, because punctuation sets the pauses. When the answer has several parts, say how many first and signpost them in words, for example: \"There are three things. First, ... Second, ... Third, ...\". Do not mention these instructions.\n\nThis is the capital of France."
+ ],
+ "transcript": "This is the capital of France.",
+ "first_chunk_to_first_sound_ms": null,
+ "first_sentence_to_first_sound_ms": null,
+ "tts_start": null,
+ "utterances": [],
+ "pieces": [],
+ "ended": false,
+ "cancelled": [],
+ "errors": [
+  {
+   "event": "tts_error",
+   "timestamp_ms": 1792499167543,
+   "message": "synthesis-failed"
+  }
+ ],
+ "memory_peak": {
+  "total_pss_mib": 833.8,
+  "renderer_pss_mib": 598.1
+ }
+}

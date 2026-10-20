@@ -1,0 +1,17 @@
+{
+  "note": "Fixed texts for the TTS benchmark (eval/tts/README.md). Change them only together with the results they produced.",
+  "items": [
+    { "id": "short-ack", "kind": "short reply", "text": "Sure, I can do that." },
+    { "id": "short-fact", "kind": "short reply", "text": "The capital of France is Paris." },
+    { "id": "question", "kind": "question", "text": "Would you like me to set a reminder for tomorrow morning?" },
+    { "id": "names", "kind": "names", "text": "Abdullah, Ayesha and Siobhan Nguyen asked Nutq to call ZeroClaw from Karachi." },
+    { "id": "numbers", "kind": "numbers", "text": "It costs $1,249.99, about 15% more than the 3 models we tested, and weighs 2.5 kg." },
+    { "id": "dates", "kind": "dates and times", "text": "The meeting moved from Monday, March 3rd, 2025 to 10:30 am on April 15." },
+    { "id": "abbreviations", "kind": "abbreviations", "text": "Dr. Smith from the U.S. office said the API runs on the CPU, e.g. on a laptop, at 44.1 kHz." },
+    {
+      "id": "paragraph",
+      "kind": "longer paragraph",
+      "text": "Here is a quick summary of your day. You have three meetings, and the first one starts at nine. Your flight to Lahore leaves on Thursday evening, so pack tonight if you can. The weather should stay dry until the weekend. Would you like me to read your messages next?"
+    }
+  ]
+}
