@@ -31,3 +31,6 @@ graphify-out/
 eval/results/*/raw/
 # Local compose state: the gateway bearer token saved by deploy/pair.sh. Never committed.
 deploy/.local/
+# Third-party files fetched by scripts/fetch-tiny-tts.mjs for the optional tiny-tts voice. Not committed, not bundled.
+local-assets/
+.venv-tts/

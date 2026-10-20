@@ -5,3 +5,4 @@ dist-ssr
 eval/results
 deploy/.local
 *.local
+.venv-tts
