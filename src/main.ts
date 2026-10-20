@@ -6,7 +6,9 @@ import { MIC_REARM_MS, REPLY_TIMEOUT_MS, ReplyState } from "./turn-state";
 import { speechText, ttsErrorEvent, voiceLines } from "./voice";
 import { isRobotic, selectVoice } from "./voice-pick";
 import { initVoiceMenu } from "./voice-menu";
-import { browserEngine } from "./tts-engine";
+import { browserEngine, type TtsEngine } from "./tts-engine";
+import { tinyEngine } from "./tts/tiny-engine";
+import { Settings, assetURL } from "./vendor/constants";
 import { SentenceSplitter } from "./sentence-splitter";
 import { replyPrefix, speakable } from "./speech-text";
 import { SpeechQueue, type SpeechEvent } from "./speech-queue";
@@ -93,6 +95,8 @@ type EvalEvent =
   | "voice_list"
   | "tts_start"
   | "tts_sentence_start"
+  | "tts_chunk"
+  | "tts_engine_ready"
   | "speech_text"
   | "tts_dropped"
   | "tts_text_mismatch"
@@ -703,6 +707,8 @@ function dropHeld(reason: "closed" | "timeout") {
 // load and again whenever the list changes, not first at speak time. The English ones are ranked and the best is used
 // (src/voice-pick.ts); ?voice=<exact name> picks any voice (any mode). The list is written to the log panel so a name can be copied.
 const wantedVoice = urlParams.get("voice");
+// ?tts=tiny: the tiny-tts voice instead of the browser's (see the engine below).
+const useTiny = urlParams.get("tts") === "tiny";
 const voiceHint = $<HTMLParagraphElement>("voice-hint");
 const voiceMenu = initVoiceMenu(wantedVoice, testVoice);
 let voices: SpeechSynthesisVoice[] = [];
@@ -714,7 +720,8 @@ function loadVoices() {
   loggedVoiceCount = voices.length;
   const robotic = isRobotic(voices);
   voiceMenu.refresh(voices);
-  voiceHint.hidden = !robotic;
+  if (useTiny) $<HTMLSelectElement>("voice-select").disabled = true; // the menu's voices are not the ones speaking
+  else voiceHint.hidden = !robotic;
   if (voices.length === 0) return;
   for (const line of voiceLines(voices)) log(line);
   const choice = selectVoice(voices, { param: wantedVoice, saved: voiceMenu.saved() });
@@ -730,8 +737,29 @@ if ("speechSynthesis" in window) {
   $<HTMLDivElement>("voice-picker").hidden = true;
 }
 
-// The engine that speaks (src/tts-engine.ts); none when the browser has no speechSynthesis, and speak() says so.
-const ttsEngine = "speechSynthesis" in window ? browserEngine(window.speechSynthesis, wantedVoice, voiceMenu.saved) : null;
+// The engine that speaks (src/tts-engine.ts): the browser's voice, or with ?tts=tiny the tiny-tts voice (src/tts/, experimental,
+// its files fetched by scripts/fetch-tiny-tts.mjs), which loads in a worker at once and falls back to the browser's voice if
+// it cannot. None when neither is available, and speak() says so.
+const browserVoice = "speechSynthesis" in window ? browserEngine(window.speechSynthesis, wantedVoice, voiceMenu.saved) : null;
+const ttsEngine: TtsEngine | null = useTiny
+  ? tinyEngine({
+      base: assetURL("local-assets/tiny-tts/"),
+      wasmPaths: Settings.BASE_ASSET_PATH.ONNX_RUNTIME,
+      fallback: browserVoice,
+      onLog: log,
+      onTiming: import.meta.env.PROD ? undefined : (t) => logEvent("tts_chunk", { ...t, normalized: undefined }),
+    })
+  : browserVoice;
+if (useTiny) {
+  // The menu lists browser voices, which this engine does not use.
+  $<HTMLSelectElement>("voice-select").disabled = true;
+  voiceHint.textContent = "Reply voice: tiny-tts (experimental, ?tts=tiny).";
+  voiceHint.hidden = false;
+  (ttsEngine as ReturnType<typeof tinyEngine>).ready.then(
+    (r) => logEvent("tts_engine_ready", { engine: "tiny-tts", ...r }),
+    () => (voiceHint.textContent = browserVoice ? "tiny-tts could not load (see the log); the browser voice speaks instead." : "tiny-tts could not load (see the log)."),
+  );
+}
 if (!ttsEngine) {
   envNote.textContent = NO_SPEECH;
   envNote.hidden = false;
@@ -754,7 +782,11 @@ let cancelReason = "canceled";
 // and speak() reports it. The "flag on" and "flag off" of the comments below mean streaming on (the default) and ?tts_stream=0.
 const splitter = new SentenceSplitter();
 let streamedChunks = ""; // the chunks of this turn so far, to compare with full_response at done
-const speechQueue = urlParams.get("tts_stream") !== "0" && ttsEngine ? new SpeechQueue(ttsEngine, logSpeechEvent) : null;
+// ?first_wait=<ms> (eval mode only) sets the first utterance's wait (FIRST_UTTERANCE_WAIT_MS in src/speech-queue.ts), to compare
+// settings per engine (eval/tts/README.md). Unset, every engine keeps the queue's default.
+const firstWaitParam = isEvalMode ? urlParams.get("first_wait") : null;
+const speechQueue =
+  urlParams.get("tts_stream") !== "0" && ttsEngine ? new SpeechQueue(ttsEngine, logSpeechEvent, firstWaitParam === null ? {} : { firstWaitMs: Number(firstWaitParam) }) : null;
 
 function logSpeechEvent(e: SpeechEvent) {
   switch (e.type) {
