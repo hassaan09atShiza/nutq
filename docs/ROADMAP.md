@@ -6,9 +6,14 @@ are welcome (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 ## Streaming and engine work
 
-- **A better voice engine than the browser's speech synthesis.** The browser voice is a placeholder. Piper is the candidate to
-  evaluate; a local engine started in about 60 ms in an earlier trial but the espeak-ng voices sounded too robotic. The start
-  delay of the browser voice was 0.8 to 2 s in the gap experiment.
+- **A better voice engine than the browser's speech synthesis.** The browser voice is a placeholder. tiny-tts runs as an
+  optional engine (`?tts=tiny`); its evaluation is in [eval/tts/README.md](../eval/tts/README.md): faster than real time and
+  under 100 MB, but it takes 2.2 to 3.7 s to load (target 1.5 s), nobody has judged the voice yet, and its model weights have
+  no license, so it cannot ship. Open: a listening verdict, the license from its author, a lighter export, and the
+  questions at the end of that page. The start delay of the browser voice was 0.8 to 2 s in the gap experiment.
+- **Let the speech queue hand the next utterance to an engine that can synthesize ahead.** With tiny-tts, no first-utterance
+  wait gives the first sound 0.53 s sooner but leaves 0.87 s of silence after the first sentence, because the queue hands
+  over the rest only when the first utterance has ended (eval/tts/README.md, "Inside Nutq").
 - **Better Linux system voices (speech-dispatcher), to research.** Firefox on Linux only has robotic system voices.
 - **Streaming speech for latency**, whether from a new engine or a cloud voice, sentence by sentence as the answer arrives.
 - **Continuous listening and local barge-in.** Today listening is tap to start and tap to stop, and a tap stops the speech.

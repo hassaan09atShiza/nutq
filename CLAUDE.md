@@ -8,7 +8,9 @@ The pipeline, in short: microphone audio is transcribed locally in-browser with 
 (WASM, no server round-trip for STT), the transcript is sent to a ZeroClaw agent over
 `/ws/chat`, and the agent's reply is spoken back with the Web Speech API (audio and speech recognition stay in the
 browser, but an online browser voice, such as Google voices in Chrome or Microsoft online voices in Edge, sends the reply
-text to that provider to be spoken). See
+text to that provider to be spoken). An optional local neural voice, tiny-tts (`?tts=tiny`, `src/tts/`), is under
+evaluation in [eval/tts/README.md](eval/tts/README.md); its model has no license, so its files stay in the gitignored
+`local-assets/` and are never committed or bundled. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow and protocol details,
 including the pairing-token gotcha and a known upstream config-parsing bug.
 

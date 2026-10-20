@@ -79,6 +79,39 @@ laptop: its `localhost` is not yours.
 5. Connect, wait for "Tap to start listening", press **Test voice** to hear the voice alone, then tap the microphone and
    ask something short. The answer is spoken sentence by sentence.
 
+## The tiny-tts voice, on Windows with WSL 2
+
+The optional neural voice (`?tts=tiny`, see [eval/tts/README.md](../eval/tts/README.md)) runs in your browser; its files are
+fetched on your machine, not committed. This sequence was not run on WSL 2 yet (TBD); each step was run in the Linux cloud
+environment. In an Ubuntu WSL 2 shell with Docker available inside WSL (Docker Desktop's WSL integration, or Docker Engine
+installed in WSL), Node 22, git, curl and `python3-venv`:
+
+```
+git clone https://github.com/hassaan09atShiza/nutq.git
+cd nutq
+git checkout claude/ecstatic-keller-yudy3d
+node scripts/fetch-tiny-tts.mjs                                   # model, dictionary, G2P weights, licenses; SHA-256 checked
+python3 -m venv .venv-tts
+.venv-tts/bin/pip install onnx==1.23.2 onnxruntime==1.29.0 numpy==2.5.4
+.venv-tts/bin/python scripts/prepare-tiny-tts.py                  # the three-part model that loads faster (optional)
+export NUTQ_ANTHROPIC_API_KEY=...                                 # your key; never commit it
+docker compose -f deploy/compose.yaml up -d --build               # after the fetch: the files are copied into the image
+deploy/check.sh                                                   # 16 checks, one real turn; saves the gateway token
+cat deploy/.local/gateway-token                                   # to paste into the page; do not share it
+```
+
+Then, in Chrome on Windows:
+
+1. http://localhost:5173/?tts=tiny, gateway `ws://127.0.0.1:42617/ws/chat`, agent `default`, the token, Connect. The line under
+   the microphone says "Reply voice: tiny-tts". Test voice, then ask something. http://localhost:5173/ is the browser voice,
+   for comparison.
+2. http://localhost:5173/eval/tts/bench.html, then **Run the benchmark**: the fixed texts, timed in your browser (one thread);
+   the result is the JSON on the page. `?runs=1` is quicker. Chrome's task manager (Shift+Esc) shows the tab's memory.
+
+Without `prepare-tiny-tts.py`, the voice loads the single `tinytts.onnx`, which takes longer to start (4.0 s instead of 2.2 s
+warm, in the cloud benchmark). If the
+voice's files are missing, the page uses the browser voice and the log says why.
+
 ## Troubleshooting
 
 | You see | Cause and fix |
@@ -95,6 +128,19 @@ laptop: its `localhost` is not yours.
 The ZeroClaw daemon logs almost nothing to `docker logs`. Its errors are in
 `/zeroclaw-data/.zeroclaw/data/state/runtime-trace.jsonl` in the `zeroclaw` container; `check.sh` prints the last
 provider error from it when a turn fails.
+
+## Checked on 2026-10-20 (Claude Code cloud environment)
+
+The same stack, with the Nutq image rebuilt from this branch after `scripts/fetch-tiny-tts.mjs` and
+`scripts/prepare-tiny-tts.py`. Real runs.
+
+- `deploy/check.sh`: 16 passed, 0 failed, including one real turn over `/ws/chat` answered by Anthropic (first chunk 834 ms and
+  done 945 ms after sending). The `nutq` container served the tiny-tts files (`/local-assets/tiny-tts/`).
+- A full spoken turn with `?tts=tiny` (`capture-speech.sh --nutq-url "http://127.0.0.1:5173/?tts=tiny"`): Moonshine transcribed
+  "What is the capital of France?" exactly, Anthropic answered, and the page spoke the answer with tiny-tts in three pieces,
+  recorded from Chrome's audio output (21.0 s, peak -4.3 dB). The voice's own measurements are in
+  [eval/tts/README.md](../eval/tts/README.md).
+- The first `up -d --build` of the day needed no workaround.
 
 ## Checked on 2026-10-19 (Claude Code cloud environment)
 

@@ -123,8 +123,35 @@ copied into this repository or into the page. Checked on 2026-10-19.
 `deploy/capture-speech.sh` also expects system packages on the machine that runs it (PulseAudio, speech-dispatcher,
 espeak-ng, Xvfb). The script does not install them; they come from that machine's own package manager.
 
-## 8. Not found
+## 8. Fetched locally, not shipped: the optional tiny-tts voice
 
-Nothing in the list above was left without a license. Two gaps in the evidence are stated in the table: the Moonshine
-weights have no license file at their download host, and the Silero model was not compared byte for byte with the file in
-its upstream repository (only with the npm package copy).
+`?tts=tiny` (src/tts/, eval/tts/README.md) uses files that `scripts/fetch-tiny-tts.mjs` downloads into `local-assets/tiny-tts/`,
+each pinned and checked by SHA-256. The folder is gitignored and outside `public/`, so neither the repository nor a production
+build contains them; the dev server serves them, and the `nutq` container has them only if they were fetched before it was
+built. **They are not to be bundled or deployed until the model's terms in the first row are settled.** Checked on 2026-10-20.
+
+| File | Source (pinned) | Size in bytes | SHA-256 | License | Evidence and what is unresolved |
+|---|---|---|---|---|---|
+| `tinytts.onnx` (the model, about 1.22 million weights, 44.1 kHz) | https://huggingface.co/backtracking/tiny-tts, revision `6d0cc902621451fcd47462b50ee0aabc6a852e25` | 6,510,795 | `2a12614685c76597d3eeec6772f2c9ce132001cf6ea8a80609f8db9fd7fb745f` | **Unresolved** | The Hugging Face repository has no model card and no license field. The GitHub repository https://github.com/tronghieuit/tiny-tts (commit `77c278f7a4659181bd7bcf5c5e07c768ae765147`, `LICENSE`: Apache-2.0, "Copyright 2025 tronghieuit") links to it as its model and its code downloads from it, but the license file covers that repository's own files, and this file was never in it. The repository's `config.json` names the training list `train_ljspeech.list`; the LJ Speech Dataset is public domain (https://keithito.com/LJ-Speech-Dataset/: "All text, audio, and annotations are in the public domain"), but no statement from the authors confirms the training data, or that no other data or pretrained model was used. To ask the author: the license of the Hugging Face weights, and the training data |
+| `tinytts.p1.onnx`, `tinytts.p2.onnx`, `tinytts.p3.onnx` | made locally from `tinytts.onnx` by `scripts/prepare-tiny-tts.py` (split in three, ONNX Runtime 1.29.0 basic optimizations) | 2,196,184; 3,083,231; 1,029,000 | `9d8c2a19...92935`, `292426a2...8d4bb`, `9aba0a53...0070c` | as `tinytts.onnx` | Derived from the model, so the same terms. The hashes are from one run with onnx 1.23.2 and onnxruntime 1.29.0; other versions may write different bytes |
+| `cmudict.rep` (CMU Pronouncing Dictionary 0.6 with syllable marks, 129,463 words) | `tiny_tts/text/cmudict.rep` in the tiny-tts repository, commit `77c278f` | 3,969,309 | `d127b5ce8b8e695732701e8efde04b9b0fa11991218b1fb9d21bd0c9264636aa` | CMU: "Use of this dictionary, for any research or commercial purpose, is completely unrestricted", acknowledgement requested | The file's own header (cmudict 0.6, 1998). The current CMUdict (https://github.com/cmusphinx/cmudict, commit `74790861f652b15e4ac49015a90074ad62a27690`) is under a BSD 2-clause style license that requires keeping its notice; this older release states no such condition. Kept with its header |
+| `g2p_model.json` (the g2p_en 2.1.0 neural G2P weights, base64) | `npm-package/g2p_model.json` in the tiny-tts repository, commit `77c278f` | 4,486,462 | `b9bf424ae0d6fea011960032cee6615097db23ab71c5770576c9c44103f1b49f` | Apache-2.0, Kyubyong Park and Jongseok Kim | All twelve arrays are byte for byte those of `checkpoint20.npz` in the PyPI wheel `g2p_en-2.1.0-py3-none-any.whl` (SHA-256 `2a7aabf1fc7f270fcc3349881407988c9245173c2413debbe5432f4a4f31319f`), compared on 2026-10-20. License: `LICENSE.txt` of https://github.com/Kyubyong/g2p at commit `c6439c274c42b9724a7fee1dc07ca6a4c68a0538` (the Apache template, copyright line not filled in) and the wheel's metadata (author "Kyubyong Park & Jongseok Kim", Apache Software License). Fetched as `LICENSE-g2p` |
+| `LICENSE-tiny-tts`, `LICENSE-g2p` | the two `LICENSE` files above, pinned | 8,144; 11,357 | `a0bf9483...b5b6`, `b40930bb...33e1` | | Kept next to the files they cover |
+
+Code in `src/tts/` is Nutq's (MIT), with three borrowed pieces credited in its comments: the 219-symbol table and the English
+language and tone offsets (identical in tiny-tts, Apache-2.0, and in MeloTTS, https://github.com/myshell-ai/MeloTTS commit
+`209145371cff8fc3bd60d7be902ea69cbdb7965a`, MIT, "Copyright (c) 2024 MyShell.ai"; tiny-tts's repository does not credit
+MeloTTS), the order of the pronunciation steps (tiny-tts), and the GRU decoding procedure of g2p_en (written anew here, not
+copied). The text normalization in `src/tts/tiny-text.ts` was written for Nutq. The voice runs on the ONNX Runtime Web wasm
+already listed in section 1, so it adds no runtime.
+
+No part of this pipeline uses eSpeak or any GPL component: pronunciation is the dictionary plus the g2p_en network (checked in
+tiny-tts's code at commit `77c278f`: no eSpeak or phonemizer import). tiny-tts's Python package depends on `g2p-en`, `nltk`,
+`transformers` and `torch`, and its npm package on `onnxruntime-node`; neither is used by Nutq.
+
+## 9. Not found
+
+One license is missing, and it is in section 8: the tiny-tts model weights on Hugging Face have none, which is why they are
+fetched locally and not shipped. In what Nutq ships, nothing was left without a license. Two gaps in the evidence are stated
+in the table: the Moonshine weights have no license file at their download host, and the Silero model was not compared byte
+for byte with the file in its upstream repository (only with the npm package copy).

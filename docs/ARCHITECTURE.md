@@ -18,7 +18,9 @@ that voice's provider (step 4):
    "Voice selection"). An online browser voice (such as Google voices in Chrome or Microsoft online voices in
    Edge) sends the reply text to that provider to be spoken; the audio and the speech recognition stay in the
    browser either way. This is a placeholder, not the intended long-term TTS; see
-   [ROADMAP.md](ROADMAP.md) for the plan to replace it with Piper.
+   [ROADMAP.md](ROADMAP.md). With `?tts=tiny`, an optional neural voice (tiny-tts) speaks instead, in a Web Worker
+   with ONNX Runtime Web; it is under evaluation, and its model has no license yet, so its files are fetched locally and
+   never bundled ([eval/tts/README.md](../eval/tts/README.md)).
 
 ## Model load order and mic gating
 

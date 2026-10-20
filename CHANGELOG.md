@@ -4,6 +4,22 @@
 
 ### Added
 
+- `?tts=tiny`: an experimental local neural voice, tiny-tts, as a second `TtsEngine` (`src/tts/`). It runs in a Web Worker with
+  ONNX Runtime Web (the wasm Moonshine already uses, one thread), splits each utterance into sentences (long ones at commas),
+  synthesizes the next while one plays, trims the model's padding, and falls back to the browser voice if its files are
+  missing. The browser voice stays the default and its settings are unchanged. Text normalization (numbers, money, times,
+  dates, units, abbreviations) is Nutq's own; pronunciation follows tiny-tts's frontend (CMUdict 0.6 and the g2p_en network,
+  no eSpeak), with acronyms spelled and joined names split.
+- `scripts/fetch-tiny-tts.mjs` (the pinned model, dictionary, G2P weights and licenses, SHA-256 checked, into the gitignored
+  `local-assets/`) and `scripts/prepare-tiny-tts.py` (cuts the model in three and pre-optimizes it: loading in the browser went
+  from 4.0 to 2.2 s warm and from 4.8 to 3.7 s cold; same samples as the original with the noise off). The model's weights have no license, so none of
+  these files is committed or bundled (`docs/THIRD_PARTY.md` section 8).
+- `eval/tts/`: a browser benchmark on fixed texts (`bench.html`, `run-bench.mjs`: download sizes, cold and warm loading, model
+  time, real-time factor, time to first sound, gaps, cancellation, browser memory from `/proc`), `run-page.mjs` (the real page
+  with real Moonshine against a stub gateway: first-wait comparison, interruption, memory), and the results of 2026-10-20 in
+  `eval/tts/README.md`. The eval-only parameter `first_wait` and the eval-only events `tts_chunk` and `tts_engine_ready`.
+- `eval/runner/tiny-tts.test.mjs`: normalization, pronunciation, sentence cutting, trimming, the fallback, and (with the files
+  fetched) the neural G2P against tiny-tts's own outputs.
 - `deploy/`: Docker Compose for Nutq's dev server and a prebuilt ZeroClaw 0.8.5 image pinned by digest, with a one-time
   seeded config (Anthropic provider `anthropic.default`, agent `default`), the API key passed to the gateway only as a
   compose secret, memory limits, and an overlay for hosts that re-sign outbound HTTPS. Checks: `check.sh` (health,

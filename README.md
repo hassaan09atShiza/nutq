@@ -131,6 +131,10 @@ vendor's online service, so Firefox sounds good on Windows but robotic on Linux.
   the name matches a voice.
 - **A hint.** If every English voice the browser lists looks like espeak, a line under the microphone says the voice can
   sound robotic and that Chrome or Edge give a clearer voice (the wording of the hint in the page).
+- **`?tts=tiny` (experimental).** A local neural voice, tiny-tts, synthesized in the browser (a Web Worker, ONNX Runtime
+  Web, one thread) instead of the browser's speech synthesis; the browser voice stays the default, and is used if the
+  voice's files are missing. Its files are not in this repository: `node scripts/fetch-tiny-tts.mjs` downloads them, and
+  their license is not settled, so they must not be deployed. See [eval/tts/README.md](eval/tts/README.md).
 - **Privacy.** Audio and speech recognition stay in the browser. Online browser voices (such as Google voices in Chrome or
   Microsoft online voices in Edge) send the reply text to that provider to be spoken. The log panel marks each voice local
   or network as the browser reports it; do not rely on that label to tell whether a voice is online.
